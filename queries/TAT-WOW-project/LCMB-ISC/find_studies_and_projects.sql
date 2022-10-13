@@ -1,6 +1,8 @@
 -- 2 separate queries, as each one individually takes ~2-3 seconds, but if I try to make them in a readable way into a combined query, it takes much longer.
 -- They can be joined in their entirety using UNION or JOIN, but it is probably cleaner to keep them as two separate queries and join using Tableau.
 -- If one sample is associated with multiple studies or projects, these appear as multiple rows.
+-- Doesn't filter events here by 'LCMB' or 'ReISC' (in the outer query), so we could theoretically find orders for the same samples to other pipelines.
+-- At time of writing, adding a metadata filter for 'LCMB' or 'ReISC' made the query slower and didn't change the results, so I left it out.
 
 -- Sample and study info
 SELECT  -- SQL_NO_CACHE
