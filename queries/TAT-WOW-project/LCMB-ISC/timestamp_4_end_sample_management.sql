@@ -30,7 +30,7 @@ FROM
   HAVING Count(*) > 1
 ) AS relevant_samples
 
--- Find all Cherrypick order_made events for the relevant samples
+-- Find all labware.received events for the relevant samples
 LEFT JOIN roles r_sample ON r_sample.subject_id = relevant_samples.ewh_sample_id
 LEFT JOIN events e ON e.id = r_sample.event_id
 LEFT JOIN event_types et ON et.id = e.event_type_id

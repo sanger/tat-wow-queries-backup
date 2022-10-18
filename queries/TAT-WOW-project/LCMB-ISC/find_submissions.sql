@@ -2,7 +2,12 @@
 -- this happens via the RT system, via the SSRs
 -- here we're using sample manifest upload to SS as a proxy
 
-SELECT ewh_sample_id, sample_uuid_bin, sample_uuid, sample_friendly_name, e.id AS manifest_event_id, e.occured_at AS 'samples_created_by_manifest'
+SELECT  ewh_sample_id
+        ,sample_uuid_bin
+        ,sample_uuid
+        ,sample_friendly_name
+        ,e.id AS manifest_event_id
+        ,e.occured_at AS 'samples_created_by_manifest'
 FROM
 (
   SELECT ewh_sample_id, sample_uuid_bin, sample_uuid, sample_friendly_name

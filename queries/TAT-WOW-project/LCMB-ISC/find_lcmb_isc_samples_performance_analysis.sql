@@ -111,7 +111,8 @@ FROM
   SELECT DISTINCT s.id AS ewh_sample_id,
                   s.uuid AS sample_uuid_bin,
                   insert(insert(insert(insert(lower(hex(s.uuid)),9,0,'-'),14,0,'-'),19,0,'-'),24,0,'-') AS sample_uuid,
-                  s.friendly_name AS sample_friendly_name, m.value AS pipeline
+                  s.friendly_name AS sample_friendly_name,
+                  m.value AS pipeline
   FROM metadata m
   JOIN events e ON e.id = m.event_id
   JOIN event_types et ON et.id = e.event_type_id
