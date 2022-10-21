@@ -1,9 +1,7 @@
-SELECT  relevant_samples.ewh_sample_id
-        ,relevant_samples.sample_uuid_bin
-        ,relevant_samples.sample_uuid
+SELECT  relevant_samples.sample_uuid
         ,relevant_samples.sample_friendly_name
-        ,iseq_run_status.date
         ,iseq_run_status_dict.description
+        ,MAX(iseq_run_status.date)
 FROM
 (
   -- Relevant (529) samples for LCMB-ISC pipeline
@@ -29,21 +27,20 @@ FROM
   HAVING Count(*) > 1
 ) AS relevant_samples
 
-JOIN mlwhd_mlwarehouse_proddata.sample mlwh_sample ON mlwh_sample.uuid_sample_lims = relevant_samples.sample_uuid -- 529
-JOIN mlwhd_mlwarehouse_proddata.iseq_flowcell iseq_flowcell USING (id_sample_tmp) -- 1,919 (including at least 1 for every sample)
-JOIN mlwhd_mlwarehouse_proddata.iseq_product_metrics iseq_product_metrics USING (id_iseq_flowcell_tmp) -- 1,919
+JOIN mlwhd_mlwarehouse_proddata.sample mlwh_sample ON mlwh_sample.uuid_sample_lims = relevant_samples.sample_uuid -- 529 sample rows
+JOIN mlwhd_mlwarehouse_proddata.iseq_flowcell iseq_flowcell USING (id_sample_tmp) -- 545 iseq_flowcell rows (1 for each 'Twist Pulldown' sample, 2 for each 'Agilent Pulldown' sample because they were run on two lanes)
+JOIN mlwhd_mlwarehouse_proddata.iseq_product_metrics iseq_product_metrics USING (id_iseq_flowcell_tmp)
 JOIN mlwhd_mlwarehouse_proddata.iseq_run_lane_metrics iseq_run_lane_metrics
 	ON iseq_product_metrics.id_run = iseq_run_lane_metrics.id_run
-	AND iseq_product_metrics.position = iseq_run_lane_metrics.position -- 1,919
+	AND iseq_product_metrics.position = iseq_run_lane_metrics.position
 JOIN mlwhd_mlwarehouse_proddata.iseq_run_status iseq_run_status
-  ON iseq_run_status.id_run = iseq_run_lane_metrics.id_run -- 26,898
+  ON iseq_run_status.id_run = iseq_run_lane_metrics.id_run
 JOIN mlwhd_mlwarehouse_proddata.iseq_run_status_dict iseq_run_status_dict
-  ON iseq_run_status_dict.id_run_status_dict = iseq_run_status.id_run_status_dict -- 26,898
+  ON iseq_run_status_dict.id_run_status_dict = iseq_run_status.id_run_status_dict
 
--- WHERE iseq_run_status_dict.description = 'run complete' -- 1,919
--- WHERE iseq_run_status_dict.description = 'analysis pending' -- 1,919
--- WHERE iseq_run_status_dict.description = 'analysis complete' -- 1,919
--- WHERE iseq_run_status_dict.description = 'qc review pending' -- 1,919
--- WHERE iseq_run_status_dict.description = 'run archived' -- 1,919
--- WHERE iseq_run_status_dict.description = 'qc complete' -- 1,919
+WHERE pipeline_id_lims IN ('Twist Pulldown', 'Agilent Pulldown')
+  AND iseq_run_status_dict.description IN ('run complete', 'analysis pending', 'analysis complete', 'qc review pending', 'run archived', 'qc complete')
+
+GROUP BY relevant_samples.sample_uuid, iseq_run_status_dict.description
+ORDER BY sample_friendly_name, MAX(iseq_run_status.date)
 ;
