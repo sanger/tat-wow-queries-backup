@@ -124,6 +124,7 @@ FROM
     AND rt.`key` = 'sample'
     AND et.`key` = 'order_made'
 ) AS all_lcmb_reisc_samples_by_pipeline
+
 GROUP BY all_lcmb_reisc_samples_by_pipeline.ewh_sample_id
 HAVING Count(*) > 1
 ;

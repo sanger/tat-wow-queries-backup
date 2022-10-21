@@ -1,5 +1,4 @@
 SELECT  -- SQL_NO_CACHE
-        DISTINCT
         relevant_samples.ewh_sample_id
         ,relevant_samples.sample_uuid_bin
         ,relevant_samples.sample_uuid
