@@ -4,7 +4,9 @@
 -- table 'labware', 'created_at' field - linked to 'plate_purposes' table, where 'name' field is 'LB Lib PCR-XP'.
 
 
-SELECT relevant_samples.sample_id, GROUP_CONCAT(l.id)
+SELECT  relevant_samples.sample_id,
+        relevant_samples.sample_uuid,
+        MIN(l.created_at) AS LB_Lib_PCR_XP_created
 FROM
 
 (
@@ -45,3 +47,4 @@ GROUP BY relevant_samples.sample_id
 -- 1,058 rows
 -- All 529 samples represented
 -- 2 LB Lib PCR-XP plates for each sample - one seems to be cherrypicked into the other
+-- Instructed to use the timestamp from the first of the two, hence the MIN()
