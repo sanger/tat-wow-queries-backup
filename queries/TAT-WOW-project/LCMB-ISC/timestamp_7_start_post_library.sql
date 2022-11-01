@@ -6,16 +6,17 @@
 
 SELECT  relevant_samples.sample_id,
         relevant_samples.sample_uuid,
+        relevant_samples.sample_name,
         MIN(l.created_at) AS LB_Lib_PCR_XP_created
 FROM
 
 (
   -- Equivalent of Events WH query identifying (529) LCMB-ISC samples, but using SS db.
-  SELECT sample_id, sample_uuid
+  SELECT sample_id, sample_name, sample_uuid
   FROM
 
   (
-    SELECT DISTINCT s.id AS 'sample_id', u.external_id AS 'sample_uuid', o_r.role AS 'pipeline'
+    SELECT DISTINCT s.id AS 'sample_id', s.name AS 'sample_name', u.external_id AS 'sample_uuid', o_r.role AS 'pipeline'
 
     FROM orders o
 
@@ -43,6 +44,7 @@ JOIN plate_purposes pp ON pp.id = l.plate_purpose_id
 WHERE pp.name = 'LB Lib PCR-XP'
 
 GROUP BY relevant_samples.sample_id
+ORDER BY relevant_samples.sample_name
 ;
 -- 1,058 rows
 -- All 529 samples represented

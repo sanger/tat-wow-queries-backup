@@ -36,4 +36,5 @@ JOIN metadata m ON m.event_id = e.id
 
 WHERE et.`key` = 'library_complete'
   AND m.`key` = 'order_type' AND m.value = 'ReISC'
+ORDER BY sample_friendly_name
 ;
