@@ -4,7 +4,7 @@ SELECT  ewh_sample_id
         ,sample_uuid_bin
         ,sample_uuid
         ,sample_friendly_name
-        ,MAX(e.occured_at) AS pool_released
+        ,pool_released
 FROM
 (
   SELECT ewh_sample_id, sample_uuid_bin, sample_uuid, sample_friendly_name
@@ -29,17 +29,25 @@ FROM
   HAVING Count(*) > 1
 ) AS relevant_samples
 
-LEFT JOIN roles r ON r.subject_id = relevant_samples.ewh_sample_id
-LEFT JOIN events e ON e.id = r.event_id
-LEFT JOIN event_types et ON et.id = e.event_type_id
-LEFT JOIN metadata m ON m.event_id = e.id
-
-WHERE et.`key` = 'pool_released'
-  AND m.`key` = 'order_type' AND m.value = 'ReISC'
-
-GROUP BY ewh_sample_id
+LEFT JOIN
+(
+  -- Grab all ReISC pool_released events, with their samples
+  -- and return the sample id and the latest event datetime
+  -- (there are multiple events per sample)
+  SELECT r.subject_id AS subject_id, MAX(e.occured_at) AS pool_released
+  FROM roles r
+  JOIN role_types rt ON rt.id = r.role_type_id
+  JOIN events e ON e.id = r.event_id
+  JOIN event_types et ON et.id = e.event_type_id
+  JOIN metadata m ON m.event_id = e.id
+  WHERE et.`key` = 'pool_released'
+    AND m.`key` = 'order_type' AND m.value = 'ReISC'
+    AND rt.`key` = 'sample'
+  GROUP BY r.subject_id
+) AS reisc_pool_released_events
+  ON relevant_samples.ewh_sample_id = reisc_pool_released_events.subject_id
 ;
 
--- only 453 rows (missing for 76 samples)
+-- only 453 rows have pool_released event(s) (missing for 76 samples)
 -- pool_released event not fired for NT1756559V, NT1756560O & NT1756561P (22 x 3 = 66 samples), presumably because they were made on 27 June, which is the day the deployment was done on
 -- pool_released event not present for NT1764717O (remaining 10 samples, and some which are not on the LCMB-ISC list), not sure why
