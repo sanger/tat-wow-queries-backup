@@ -3,7 +3,7 @@ SELECT  -- SQL_NO_CACHE
         ,relevant_samples.sample_uuid_bin
         ,relevant_samples.sample_uuid
         ,relevant_samples.sample_friendly_name
-        ,MIN(qc.date_created) AS 'first_qc_result'
+        ,MIN(qc.date_created) AS 'sample_management_qc_result_date'
 FROM
 (
   -- Relevant (529) samples for LCMB-ISC pipeline
@@ -32,5 +32,9 @@ FROM
 JOIN mlwhd_mlwarehouse_proddata.sample mlwh_sample ON mlwh_sample.uuid_sample_lims = relevant_samples.sample_uuid
 JOIN mlwhd_mlwarehouse_proddata.qc_result qc USING (id_sample_tmp)
 
+WHERE qc.labware_purpose = 'Stock Plate' AND qc.assay = 'Stock - Plate Reader v1.0'
+
 GROUP BY relevant_samples.ewh_sample_id, relevant_samples.sample_uuid_bin, relevant_samples.sample_uuid, relevant_samples.sample_friendly_name
 ;
+
+-- only returns 16 rows, as it looks like only one of our plates in the range we're checking went through Sample Management
