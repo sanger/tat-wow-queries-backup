@@ -22,8 +22,14 @@ SELECT  DISTINCT s.id AS ewh_sample_id,
 JOIN mlwhd_mlwarehouse_proddata.sample mlwh_sample ON mlwh_sample.uuid_sample_lims = gbs_samples.sample_uuid
 JOIN mlwhd_mlwarehouse_proddata.iseq_flowcell iseq_flowcell USING (id_sample_tmp)
 
+-- Beware! If a new primer panel is used in the lab, this list will need to be updated.
 WHERE iseq_flowcell.primer_panel IN ('PFA_GRC1_v1.0', 'PFA_GRC2_v1.0', 'PFA_Spec', 'PVIV_GRC_1.0')
 ;
 -- 4,301
 -- most recent vivax ones are from Feb 2021 - is this expected?
 -- SSR says "we get so few samples for vivax they are waiting a while. The panel is still good and used."
+-- To find primer panel values, you can:
+  -- go to the bulk submission page in Sequencescape UI
+  -- select "Limber-Htp - GBS" as the submission template
+  -- look at the values in the 'primer panel' dropdown
+  -- an SSR can tell you which ones in the list are relevant
