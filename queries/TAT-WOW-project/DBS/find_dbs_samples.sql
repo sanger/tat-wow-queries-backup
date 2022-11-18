@@ -1,5 +1,5 @@
 -- All samples that have had a GbS submission, and have been sequenced using a relevant primer panel
-SELECT DISTINCT ewh_sample_id
+SELECT DISTINCT ewh_sample_id, sample_uuid_bin, sample_uuid, sample_friendly_name
 FROM
 (
 SELECT  DISTINCT s.id AS ewh_sample_id,
@@ -24,6 +24,8 @@ JOIN mlwhd_mlwarehouse_proddata.iseq_flowcell iseq_flowcell USING (id_sample_tmp
 
 -- Beware! If a new primer panel is used in the lab, this list will need to be updated.
 WHERE iseq_flowcell.primer_panel IN ('PFA_GRC1_v1.0', 'PFA_GRC2_v1.0', 'PFA_Spec', 'PVIV_GRC_1.0')
+
+ORDER BY sample_friendly_name
 ;
 -- 4,301
 -- most recent vivax ones are from Feb 2021 - is this expected?

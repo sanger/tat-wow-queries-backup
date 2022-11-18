@@ -1,8 +1,10 @@
+-- study name and timestamp concatenated, so get one row per sample
 SELECT  relevant_samples.ewh_sample_id
         ,relevant_samples.sample_uuid_bin
         ,relevant_samples.sample_uuid
         ,relevant_samples.sample_friendly_name
-        ,sr.labware_human_barcode
+        ,GROUP_CONCAT(DISTINCT(sub.friendly_name)) AS study_friendly_names
+        ,GROUP_CONCAT(DISTINCT(studies.created)) AS studies_set_up
 FROM
 (
   -- All samples that have had a GbS submission, and have been sequenced using a relevant primer panel
@@ -32,15 +34,26 @@ FROM
   WHERE iseq_flowcell.primer_panel IN ('PFA_GRC1_v1.0', 'PFA_GRC2_v1.0', 'PFA_Spec', 'PVIV_GRC_1.0')
 ) AS relevant_samples
 
-JOIN mlwhd_mlwarehouse_proddata.sample mlwh_sample ON mlwh_sample.uuid_sample_lims = relevant_samples.sample_uuid
-JOIN mlwhd_mlwarehouse_proddata.stock_resource sr USING (id_sample_tmp)
+-- Find all order_made events for the relevant samples (1,837 rows, 54 distinct events)
+LEFT JOIN roles r_sample ON r_sample.subject_id = relevant_samples.ewh_sample_id
+LEFT JOIN events e ON e.id = r_sample.event_id
+LEFT JOIN event_types et ON et.id = e.event_type_id
+
+-- Find any 'study' subjects associated with these events
+LEFT JOIN roles r ON r.event_id = e.id
+LEFT JOIN role_types rt ON rt.id = r.role_type_id
+LEFT JOIN subjects sub ON r.subject_id = sub.id
+
+-- Join to MLWH study table to get timestamp of Study creation in Sequencescape
+LEFT JOIN mlwhd_mlwarehouse_proddata.study studies ON insert(insert(insert(insert(lower(hex(sub.uuid)),9,0,'-'),14,0,'-'),19,0,'-'),24,0,'-') = studies.uuid_study_lims
+
+WHERE et.`key` = 'order_made'
+  AND rt.`key` = 'study'
+
+GROUP BY relevant_samples.ewh_sample_id
+        ,relevant_samples.sample_uuid_bin
+        ,relevant_samples.sample_uuid
+        ,relevant_samples.sample_friendly_name
 
 ORDER BY relevant_samples.sample_friendly_name
 ;
-
--- distinct stock plate barcodes (52):
--- 'DN889383T','DN906212B','DN901114D','DN906213C','DN889403G','DN889402F','DN906214D','DN873164E','DN889381R','DN873165F','DN873163D','DN889382S','DN833219F','DN833224C','DN833218E','DN824038B','DN824034U','DN824040S','DN824036W','DN824037A','DN824039C','DN906215E','DN890237C','DN906216F','DN901115E','DN946556T','DN906217G','DN903543F','DN944685T','DN944686U','DN944687V','DN944689A','DN944690Q','DN944688W','DN944691R','SQPP-2639-H','SQPP-106-M','SQPP-2634-C','SQPP-2635-D','SQPP-2636-E','DN946555S','DN946553Q','DN946554R','SQPP-101-H','SQPP-102-I','SQPP-104-K','SQPP-103-J','SQPP-105-L','SQPP-2637-F','SQPP-2643-D','SQPP-2638-G','SQPP-2645-F',
--- stock plate barcodes match up nicely to those from WIP spreadsheet.
--- In the WIP, if the "pre-extracted plate" column is filled out, these barcodes map to that column, otherwise they map to the "stock plate" column.
--- All above barcodes are found in the WIP, either in "GbS" or "GbS Complete" tabs.
--- From spot-checking, it looks like any barcodes in the WIP that are *not* in the above list are because of the time window looked at in the query.
