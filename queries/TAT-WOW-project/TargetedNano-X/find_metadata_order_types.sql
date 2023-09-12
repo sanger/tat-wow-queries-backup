@@ -1,0 +1,1 @@
+select group_concat(distinct `value` order by `value` separator ' ') from metadata where `key`='order_type';
